@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Helpers\NewFile.txt" />
+    <None Remove="Interfaces\NewFile.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AdaptiveCards" />
+    <PackageReference Include="AdaptiveCards.Templating" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" />
+    <PackageReference Include="Microsoft.Graph" />
+    <PackageReference Include="Microsoft.Graph.Communications.Calls" />
+    <PackageReference Include="Microsoft.Graph.Communications.Core" />
+    <PackageReference Include="System.Net.Http.Formatting.Extension" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\libraries\Authentication\Authentication.Msal\Microsoft.Agents.Authentication.Msal.csproj" />
+    <ProjectReference Include="..\..\..\libraries\BotBuilder\Microsoft.Agents.BotBuilder.Dialogs\Microsoft.Agents.BotBuilder.Dialogs.csproj" />
+    <ProjectReference Include="..\..\..\libraries\BotBuilder\Microsoft.Agents.BotBuilder\Microsoft.Agents.BotBuilder.csproj" />
+    <ProjectReference Include="..\..\..\libraries\Client\Microsoft.Agents.Client\Microsoft.Agents.Client.csproj" />
+    <ProjectReference Include="..\..\..\libraries\Client\Microsoft.Agents.Connector\Microsoft.Agents.Connector.csproj" />
+    <ProjectReference Include="..\..\..\libraries\Core\Microsoft.Agents.Authentication\Microsoft.Agents.Authentication.csproj" />
+    <ProjectReference Include="..\..\..\libraries\Core\Microsoft.Agents.Core\Microsoft.Agents.Core.csproj" />
+    <ProjectReference Include="..\..\..\libraries\Hosting\AspNetCore\Microsoft.Agents.Hosting.AspNetCore.csproj" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

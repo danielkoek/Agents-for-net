@@ -18,12 +18,15 @@
   <ItemGroup>
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageVersion Include="CsvHelper" Version="33.0.1" />
+    <PackageVersion Include="Microsoft.CognitiveServices.Speech" Version="1.24.1" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="9.1.0-preview.1.25064.3" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.Graph.Communications.Calls" Version="1.2.0.5304" />
+    <PackageVersion Include="Microsoft.Graph.Communications.Core" Version="1.2.0.5304" />
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.1.2" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.146" />
     <PackageVersion Include="AdaptiveCards.Rendering.Html" Version="2.7.3" />
-    <PackageVersion Include="Azure.Identity" Version="1.13.2" />
+    <PackageVersion Include="Azure.Identity" Version="1.7.0" />
     <PackageVersion Include="Azure.Core" Version="1.43.0" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.67.2" />
     <PackageVersion Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.67.2" />
@@ -43,6 +46,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extentions_PkgVer)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(Microsoft_Extentions_PkgVer)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(Microsoft_Extentions_PkgVer)" />
+    <PackageVersion Include="System.Net.Http.Formatting.Extension" Version="5.2.3" />
     <PackageVersion Include="System.Text.Json" Version="8.0.5" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <!-- ASP.net Core support -->
@@ -79,8 +83,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_Extentions_PkgVer)" />
     <!-- Teams samples -->
     <PackageVersion Include="AdaptiveCards" Version="3.1.0" />
-    <PackageVersion Include="AdaptiveCards.Templating" Version="2.0.3" />
-    <PackageVersion Include="Microsoft.Graph" Version="4.47.0" />
+    <PackageVersion Include="AdaptiveCards.Templating" Version="1.3.1" />
+    <PackageVersion Include="Microsoft.Graph" Version="4.45.0" />
     <PackageVersion Include="Microsoft.Graph.Core" Version="2.0.14" />
     <!-- Semantic Kernel Samples -->
     <PackageVersion Include="Microsoft.SemanticKernel.Agents.Core" Version="1.29.0-alpha" />
