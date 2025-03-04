@@ -2,9 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Agents.Authentication;
+using Microsoft.Agents.Authentication.Msal;
 using Microsoft.Agents.BotBuilder;
 using Microsoft.Agents.Core.Interfaces;
 using Microsoft.Agents.Core.Models;
@@ -12,6 +16,7 @@ using Microsoft.Agents.State;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Identity.Client;
 
 namespace AuthenticationBot
 {
@@ -22,13 +27,16 @@ namespace AuthenticationBot
         private readonly OAuthFlow _flow;
         private readonly ConversationState _conversationState;
         private FlowState _state;
+        private readonly IConnections _connections;
+        private static ConcurrentDictionary<string, IConfidentialClientApplication> _clientApps = new ConcurrentDictionary<string, IConfidentialClientApplication>();
 
-        public AuthBot(IConfiguration configuration, ConversationState conversationState, ILogger<AuthBot> logger)
+        public AuthBot(IConfiguration configuration, ConversationState conversationState, IConnections connections, ILogger<AuthBot> logger)
         {
             _logger = logger ?? NullLogger<AuthBot>.Instance;
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _conversationState = conversationState ?? throw new ArgumentNullException(nameof(conversationState));
             _flow = new OAuthFlow("Sign In", "Please sign in", _configuration["ConnectionName"], 30000, null);
+            _connections = connections ?? throw new ArgumentNullException(nameof(connections));
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -84,8 +92,41 @@ namespace AuthenticationBot
 
                 if (tokenResponse != null)
                 {
-                    await turnContext.SendActivityAsync(MessageFactory.Text($"Here is your token {tokenResponse.Token}"), cancellationToken);
+                    //await turnContext.SendActivityAsync(MessageFactory.Text($"Here is your token {tokenResponse.Token}"), cancellationToken);
+                    await turnContext.SendActivityAsync(MessageFactory.Text($"Your Logged In!"), cancellationToken);
                 }
+
+                var connectionKey = "BotServiceConnection"; 
+                var botSvcConnection = _connections.GetConnection("BotServiceConnection");
+
+                if (botSvcConnection != null && botSvcConnection is MsalAuth authLib)
+                {
+                    IConfidentialClientApplication? clientApp = null;
+                    if (_clientApps.ContainsKey(connectionKey))
+                    {
+                        _clientApps.TryRemove(connectionKey, out clientApp);
+                    }
+
+                    if (clientApp == null)
+                    {
+                        var method = authLib.GetType().GetMethod("CreateClientApplication", BindingFlags.NonPublic | BindingFlags.Instance);
+                        var holderApp = method?.Invoke(authLib, null);
+                        if (holderApp != null && holderApp is IConfidentialClientApplication confAppNew)
+                        {
+                            clientApp = confAppNew;
+                            _clientApps.TryAdd(connectionKey, confAppNew);
+                        }
+                    }
+                    // invoke the private CreateClientApplication method on authLib
+                    AuthenticationResult authResult = null;
+                    if (clientApp != null && clientApp is IConfidentialClientApplication confApp)
+                    {
+                        authResult = await confApp.AcquireTokenOnBehalfOf(new string[] { "User.Read.All" }, new UserAssertion(tokenResponse.Token)).ExecuteAsync();
+                    }
+                }
+
+
+
             }
         }
 
