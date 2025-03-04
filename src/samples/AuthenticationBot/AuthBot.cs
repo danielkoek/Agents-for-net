@@ -59,6 +59,7 @@ namespace AuthenticationBot
 
                 await _flow.SignOutUserAsync(turnContext, cancellationToken);
                 await turnContext.SendActivityAsync(MessageFactory.Text("You have been signed out."), cancellationToken);
+                return; 
             }
             else
             {
@@ -94,34 +95,35 @@ namespace AuthenticationBot
                 {
                     //await turnContext.SendActivityAsync(MessageFactory.Text($"Here is your token {tokenResponse.Token}"), cancellationToken);
                     await turnContext.SendActivityAsync(MessageFactory.Text($"Your Logged In!"), cancellationToken);
-                }
 
-                var connectionKey = "BotServiceConnection"; 
-                var botSvcConnection = _connections.GetConnection("BotServiceConnection");
 
-                if (botSvcConnection != null && botSvcConnection is MsalAuth authLib)
-                {
-                    IConfidentialClientApplication? clientApp = null;
-                    if (_clientApps.ContainsKey(connectionKey))
+                    var connectionKey = "BotServiceConnection";
+                    var botSvcConnection = _connections.GetConnection("BotServiceConnection");
+
+                    if (botSvcConnection != null && botSvcConnection is MsalAuth authLib)
                     {
-                        _clientApps.TryRemove(connectionKey, out clientApp);
-                    }
-
-                    if (clientApp == null)
-                    {
-                        var method = authLib.GetType().GetMethod("CreateClientApplication", BindingFlags.NonPublic | BindingFlags.Instance);
-                        var holderApp = method?.Invoke(authLib, null);
-                        if (holderApp != null && holderApp is IConfidentialClientApplication confAppNew)
+                        IConfidentialClientApplication? clientApp = null;
+                        if (_clientApps.ContainsKey(connectionKey))
                         {
-                            clientApp = confAppNew;
-                            _clientApps.TryAdd(connectionKey, confAppNew);
+                            _clientApps.TryRemove(connectionKey, out clientApp);
                         }
-                    }
-                    // invoke the private CreateClientApplication method on authLib
-                    AuthenticationResult authResult = null;
-                    if (clientApp != null && clientApp is IConfidentialClientApplication confApp)
-                    {
-                        authResult = await confApp.AcquireTokenOnBehalfOf(new string[] { "User.Read.All" }, new UserAssertion(tokenResponse.Token)).ExecuteAsync();
+
+                        if (clientApp == null)
+                        {
+                            var method = authLib.GetType().GetMethod("CreateClientApplication", BindingFlags.NonPublic | BindingFlags.Instance);
+                            var holderApp = method?.Invoke(authLib, null);
+                            if (holderApp != null && holderApp is IConfidentialClientApplication confAppNew)
+                            {
+                                clientApp = confAppNew;
+                                _clientApps.TryAdd(connectionKey, confAppNew);
+                            }
+                        }
+                        // invoke the private CreateClientApplication method on authLib
+                        AuthenticationResult authResult = null;
+                        if (clientApp != null && clientApp is IConfidentialClientApplication confApp)
+                        {
+                            authResult = await confApp.AcquireTokenOnBehalfOf(new string[] { "User.Read.All" }, new UserAssertion(tokenResponse.Token)).ExecuteAsync();
+                        }
                     }
                 }
 
