@@ -5,6 +5,7 @@ using AuthorizationAgent;
 using Microsoft.Agents.Hosting.AspNetCore;
 using Microsoft.Agents.Samples;
 using Microsoft.Agents.Storage;
+using Microsoft.Agents.Storage.Blobs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -32,7 +33,9 @@ builder.AddAgent<AuthAgent>();
 // For production Agents, persisted storage should be used so
 // that state survives Agent restarts, and operate correctly
 // in a cluster of Agent instances.
-builder.Services.AddSingleton<IStorage, MemoryStorage>();
+builder.Services.AddSingleton<IStorage>((sp) => new BlobsStorage(
+    builder.Configuration["BlobsStorageOptions:ConnectionString"],
+    builder.Configuration["BlobsStorageOptions:ContainerName"]));
 
 var app = builder.Build();
 

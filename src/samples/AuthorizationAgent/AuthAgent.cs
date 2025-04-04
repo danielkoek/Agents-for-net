@@ -6,6 +6,9 @@ using Microsoft.Agents.Builder.App;
 using Microsoft.Agents.Builder.State;
 using Microsoft.Agents.Builder.UserAuth;
 using Microsoft.Agents.Core.Models;
+using Microsoft.Graph;
+using System;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,10 +23,31 @@ public class AuthAgent : AgentApplication
         OnMessage("/signin", SignInAsync);
         OnMessage("/signout", SignOutAsync);
         OnMessage("/reset", ResetAsync);
+        OnMessage("/me", MeAsync);
         Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
         Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
-        OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
+       // OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
+    }
+
+    private async Task MeAsync(ITurnContext turnContext, ITurnState state, CancellationToken ct)
+    {
+        string token = state.User.GetValue<string>("token");
+        if (token == null)
+        {
+            await turnContext.SendActivityAsync("Login first", cancellationToken: ct);
+            await SignInAsync(turnContext, state, ct);
+            return;
+        }
+
+        var _userClient = new GraphServiceClient(new DelegateAuthenticationProvider(requestMessage =>
+           {
+               requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
+               return Task.FromResult(0);
+           }));
+        var me = await _userClient.Me.Request().GetAsync();
+        Console.WriteLine(me);
+        await turnContext.SendActivityAsync($"Hello {me.GivenName} {me.Surname} ({me.DisplayName}) {me.JobTitle} {me.Mail}");
     }
 
     private async Task WelcomeMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
@@ -70,6 +94,7 @@ public class AuthAgent : AgentApplication
 
     private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
+        turnState.User.SetValue<string>("token", token);
         await turnContext.SendActivityAsync($"Manual Sign In: Successfully logged in to '{handlerName}'", cancellationToken: cancellationToken);
     }
 
