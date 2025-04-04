@@ -25,7 +25,7 @@ public class AuthAgent : AgentApplication
         OnMessage("/signout", SignOutAsync);
 
         // In this iteration this is only called for Auto SignIn
-        // Could drop this in favor of AgentApplicationOptions.SignInFailedMessage
+        // Could drop this in favor of UserAuthorizationOptions.SignInFailedMessage
         Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
         OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
