@@ -38,7 +38,7 @@ namespace Microsoft.Agents.Builder.App.UserAuth
     /// </remarks>
     public class UserAuthorization
     {
-        private readonly AutoSignInSelectorAsync? _startSignIn;
+        private readonly AutoSignInSelector? _startSignIn;
         private const string SIGN_IN_STATE_KEY = "__SignInState__";
         private readonly IUserAuthorizationDispatcher _dispatcher;
         private readonly UserAuthorizationOptions _options;
