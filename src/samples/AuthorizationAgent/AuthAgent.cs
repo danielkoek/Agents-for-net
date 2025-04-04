@@ -15,12 +15,17 @@ public class AuthAgent : AgentApplication
 {
     public AuthAgent(AgentApplicationOptions options) : base(options)
     {
+        // Perform an auto sign in if the user sends "auto"
         options.UserAuthorization.AutoSignIn = (turnContext, cancellationToken) => Task.FromResult(turnContext.Activity.Text == "auto");
 
         OnConversationUpdate(ConversationUpdateEvents.MembersAdded, WelcomeMessageAsync);
 
+        // Manual sign in/out of 'graph'
         OnMessage("/signin", SignInAsync);
         OnMessage("/signout", SignOutAsync);
+
+        // In this iteration this is only called for Auto SignIn
+        // Could drop this in favor of AgentApplicationOptions.SignInFailedMessage
         Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
         OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
@@ -59,6 +64,8 @@ public class AuthAgent : AgentApplication
 
     private async Task OnMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
+        // After auto sign in is complete, the original Activity is processed.  In this case, "auto" is what the
+        // user sent to start the sign in, and routed normally to this handler.
         if (turnContext.Activity.Text == "auto")
         {
             await turnContext.SendActivityAsync($"Auto Sign In: Successfully logged in to '{Authorization.DefaultHandlerName}', token length: {Authorization.GetTurnToken(Authorization.DefaultHandlerName).Length}", cancellationToken: cancellationToken);
@@ -72,6 +79,6 @@ public class AuthAgent : AgentApplication
 
     private async Task OnUserSignInFailure(ITurnContext turnContext, ITurnState turnState, string handlerName, SignInResponse response, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
-        await turnContext.SendActivityAsync($"Manual Sign In: Failed to login to '{handlerName}': {response.Message}", cancellationToken: cancellationToken);
+        await turnContext.SendActivityAsync($"Auto Sign In: Failed to login to '{handlerName}': {response.Message}", cancellationToken: cancellationToken);
     }
 }

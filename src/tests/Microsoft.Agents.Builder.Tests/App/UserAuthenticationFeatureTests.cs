@@ -297,20 +297,93 @@ namespace Microsoft.Agents.Builder.Tests.App
                 {
                     await turnContext.SendActivityAsync($"sign in success for '{GraphName}' and you said '{turnContext.Activity.Text}'", cancellationToken: CancellationToken.None);
                 }
-            }); 
+            });
+
+            // act
+            new Thread(() =>
+            {
+                // This is because TestAdapter/TestFlow are synchronous handling, one message at a time and this
+                // test blocks on the Authorization.SignInUserAsync.
+                Thread.CurrentThread.IsBackground = true;
+                Thread.Sleep(2000);
+                var testFlow2 = new TestFlow(adapter, async (turnContext, cancellationToken) =>
+                {
+                    await app.OnTurnAsync(turnContext, cancellationToken);
+                });
+                testFlow2
+                    .Send("magic code")
+                    .StartTestAsync();
+            }).Start();
+
+            var testFlow1 = new TestFlow(adapter, async (turnContext, cancellationToken) =>
+            {
+                await app.OnTurnAsync(turnContext, cancellationToken);
+            });
+            await testFlow1
+                .Send("/signin")
+                .AssertReply($"sign in success for '{GraphName}' and you said '/signin'")
+                .StartTestAsync();
+
+            // assert
+            Assert.NotNull(app.Authorization.GetTurnToken(GraphName));
+        }
+
+        [Fact]
+        public async Task Test_ManualSignInOnTimeout()
+        {
+            // arrange
+            var storage = new MemoryStorage();
+            var adapter = new TestAdapter();
+
+            // mock IUserAuthorization that returns null the first attempt, then a token after that.
+            int attempt = 0;
+            var graphMock = new Mock<IUserAuthorization>();
+            graphMock
+                .Setup(e => e.SignInUserAsync(It.IsAny<ITurnContext>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<IList<string>>(), It.IsAny<CancellationToken>()))
+                .Returns(() =>
+                {
+                    if (attempt++ == 0)
+                    {
+                        return Task.FromResult((string)null);
+                    }
+                    return Task.FromResult(GraphToken);
+                });
+            graphMock
+                .Setup(e => e.Name)
+                .Returns(GraphName);
+            graphMock
+                .Setup(e => e.Timeout)
+                .Returns(2000);
+
+            // arrange
+            var options = new TestApplicationOptions()
+            {
+                Adapter = adapter,
+                TurnStateFactory = () => new TurnState(storage),
+                UserAuthorization = new UserAuthorizationOptions(MockConnections.Object, graphMock.Object)
+                {
+                    AutoSignIn = UserAuthorizationOptions.AutoSignInOff
+                }
+            };
+            var app = new TestApplication(options);
+
+            app.OnMessage("/signin", async (turnContext, turnState, cancellationToken) =>
+            {
+                var response = await app.Authorization.SignInUserAsync(turnContext, turnState, GraphName);
+                if (response.Status == SignInStatus.Error)
+                {
+                    await turnContext.SendActivityAsync($"failed logged in to '{GraphName}', error: {response.Cause}", cancellationToken: cancellationToken);
+                }
+            });
 
             // act
             await new TestFlow(adapter, async (turnContext, cancellationToken) =>
             {
                 await app.OnTurnAsync(turnContext, cancellationToken);
             })
-            .Send("/signin")
-            .Send("magic code")
-            .AssertReply($"sign in success for '{GraphName}' and you said '/signin'")
-            .StartTestAsync();
-
-            // assert
-            Assert.NotNull(app.Authorization.GetTurnToken(GraphName));
+                .Send("/signin")
+                .AssertReply($"failed logged in to '{GraphName}', error: Timeout")
+                .StartTestAsync();
         }
 
         [Fact]
