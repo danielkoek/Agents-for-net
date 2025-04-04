@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +22,7 @@ builder.Logging.AddDebug();
 builder.Services.AddAgentAspNetAuthentication(builder.Configuration);
 
 // Add AgentApplicationOptions from config.
-builder.AddAgentApplicationOptions(autoSignIn: (context, cancellationToken) => Task.FromResult(context.Activity.Text == "auto"));
+builder.AddAgentApplicationOptions();
 
 // Add the Agent
 builder.AddAgent<AuthAgent>();

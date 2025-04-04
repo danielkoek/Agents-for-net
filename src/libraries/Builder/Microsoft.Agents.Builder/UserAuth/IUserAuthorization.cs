@@ -13,6 +13,7 @@ namespace Microsoft.Agents.Builder.UserAuth
     public interface IUserAuthorization
     {
         string Name { get; }
+        int Timeout { get; }
 
         /// <summary>
         /// Signs in a user.
@@ -43,5 +44,15 @@ namespace Microsoft.Agents.Builder.UserAuth
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task ResetStateAsync(ITurnContext turnContext, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the token if the user is signed in, otherwise null.
+        /// </summary>
+        /// <param name="turnContext"></param>
+        /// <param name="exchangeConnection"></param>
+        /// <param name="exchangeScopes"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>null if not signed in, otherwise the token.</returns>
+        Task<string> GetUserToken(ITurnContext turnContext, string exchangeConnection = null, IList<string> exchangeScopes = null, CancellationToken cancellationToken = default);
     }
 }

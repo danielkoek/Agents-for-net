@@ -14,7 +14,7 @@ namespace Microsoft.Agents.Builder.UserAuth.TokenService
         /// <summary>
         /// The default timeout for the exchange.
         /// </summary>
-        public static readonly TimeSpan DefaultTimeoutValue = TimeSpan.FromMinutes(15);
+        public static readonly TimeSpan DefaultTimeoutValue = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// Gets or sets the name of the OAuth Connection defined on the Azure Bot.

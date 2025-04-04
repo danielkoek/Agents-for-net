@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Azure;
 using Microsoft.Agents.Authentication;
 using Microsoft.Agents.Builder.App;
 using Microsoft.Agents.Builder.App.UserAuth;
@@ -235,12 +234,11 @@ namespace Microsoft.Agents.Builder.Tests.App
 
             app.OnMessage("/signin", async (turnContext, turnState, cancellationToken) =>
             {
-                await app.Authorization.SignInUserAsync(turnContext, turnState, GraphName);
-            });
-
-            app.Authorization.OnUserSignInSuccess(async (turnContext, turnState, handlerName, token, activity, CancellationToken) =>
-            {
-                await turnContext.SendActivityAsync($"sign in success for '{handlerName}' and you said '{activity.Text}'", cancellationToken: CancellationToken.None);
+                var response = await app.Authorization.SignInUserAsync(turnContext, turnState, GraphName);
+                if (response.Status == SignInStatus.Complete)
+                {
+                    await turnContext.SendActivityAsync($"sign in success for '{GraphName}' and you said '{turnContext.Activity.Text}'", cancellationToken: CancellationToken.None);
+                }
             });
 
             // act
@@ -294,13 +292,12 @@ namespace Microsoft.Agents.Builder.Tests.App
 
             app.OnMessage("/signin", async (turnContext, turnState, cancellationToken) =>
             {
-                await app.Authorization.SignInUserAsync(turnContext, turnState, GraphName);
+                var response = await app.Authorization.SignInUserAsync(turnContext, turnState, GraphName);
+                if (response.Status == SignInStatus.Complete)
+                {
+                    await turnContext.SendActivityAsync($"sign in success for '{GraphName}' and you said '{turnContext.Activity.Text}'", cancellationToken: CancellationToken.None);
+                }
             }); 
-
-            app.Authorization.OnUserSignInSuccess(async (turnContext, turnState, handlerName, token, activity, CancellationToken) =>
-            {
-                await turnContext.SendActivityAsync($"sign in success for '{handlerName}' and you said '{activity.Text}'", cancellationToken: CancellationToken.None);
-            });
 
             // act
             await new TestFlow(adapter, async (turnContext, cancellationToken) =>

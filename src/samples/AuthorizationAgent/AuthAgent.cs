@@ -15,12 +15,12 @@ public class AuthAgent : AgentApplication
 {
     public AuthAgent(AgentApplicationOptions options) : base(options)
     {
+        options.UserAuthorization.AutoSignIn = (turnContext, cancellationToken) => Task.FromResult(turnContext.Activity.Text == "auto");
+
         OnConversationUpdate(ConversationUpdateEvents.MembersAdded, WelcomeMessageAsync);
 
         OnMessage("/signin", SignInAsync);
         OnMessage("/signout", SignOutAsync);
-        OnMessage("/reset", ResetAsync);
-        Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
         Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
         OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
@@ -39,20 +39,22 @@ public class AuthAgent : AgentApplication
 
     private async Task SignInAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
-        await Authorization.SignInUserAsync(turnContext, turnState, "graph", cancellationToken: cancellationToken);
+        var handlerName = "graph";
+        var response = await Authorization.SignInUserAsync(turnContext, turnState, handlerName, cancellationToken: cancellationToken);
+        if (response.Status == SignInStatus.Complete)
+        {
+            await turnContext.SendActivityAsync($"SignInAsync: Successfully logged in to '{handlerName}', token length: {response.Token.Length}", cancellationToken: cancellationToken);
+        }
+        else
+        {
+            await turnContext.SendActivityAsync($"SignInAsync: Failed logged in to '{handlerName}', error: {response.Cause}", cancellationToken: cancellationToken);
+        }
     }
 
     private async Task SignOutAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
-        await Authorization.SignOutUserAsync(turnContext, turnState, cancellationToken: cancellationToken);
+        await Authorization.SignOutUserAsync(turnContext, turnState, "graph", cancellationToken);
         await turnContext.SendActivityAsync("You have signed out", cancellationToken: cancellationToken);
-    }
-
-    private async Task ResetAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
-    {
-        await turnState.Conversation.DeleteStateAsync(turnContext, cancellationToken);
-        await turnState.User.DeleteStateAsync(turnContext, cancellationToken);
-        await turnContext.SendActivityAsync("Ok I've deleted the current turn state", cancellationToken: cancellationToken);
     }
 
     private async Task OnMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
@@ -68,13 +70,8 @@ public class AuthAgent : AgentApplication
         }
     }
 
-    private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
-    {
-        await turnContext.SendActivityAsync($"Manual Sign In: Successfully logged in to '{handlerName}'", cancellationToken: cancellationToken);
-    }
-
     private async Task OnUserSignInFailure(ITurnContext turnContext, ITurnState turnState, string handlerName, SignInResponse response, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
-        await turnContext.SendActivityAsync($"Manual Sign In: Failed to login to '{handlerName}': {response.Error.Message}", cancellationToken: cancellationToken);
+        await turnContext.SendActivityAsync($"Manual Sign In: Failed to login to '{handlerName}': {response.Message}", cancellationToken: cancellationToken);
     }
 }

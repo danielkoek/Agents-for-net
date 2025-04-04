@@ -42,6 +42,7 @@ namespace Microsoft.Agents.Builder.UserAuth.TokenService
             : this(settings, new BotUserAuthorization(name, settings, storage))
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            Timeout = (int)settings.Timeout;
             _connections = connections ?? throw new ArgumentNullException(nameof(connections));
         }
 
@@ -59,6 +60,7 @@ namespace Microsoft.Agents.Builder.UserAuth.TokenService
         }
 
         public string Name { get; private set; }
+        public int Timeout { get; }
 
         /// <inheritdoc/>
         public async Task<string> SignInUserAsync(ITurnContext turnContext, bool forceSignIn = false, string exchangeConnection = null, IList<string> exchangeScopes = null, CancellationToken cancellationToken = default)
@@ -95,9 +97,15 @@ namespace Microsoft.Agents.Builder.UserAuth.TokenService
         /// <summary>
         /// Get user token
         /// </summary>
-        protected virtual async Task<TokenResponse> GetUserToken(ITurnContext turnContext, string connectionName, CancellationToken cancellationToken)
+        public virtual async Task<string> GetUserToken(ITurnContext turnContext, string exchangeConnection = null, IList<string> exchangeScopes = null, CancellationToken cancellationToken = default)
         {
-            return await UserTokenClientWrapper.GetUserTokenAsync(turnContext, connectionName, "", cancellationToken).ConfigureAwait(false);
+            string token = null;
+            var response = await UserTokenClientWrapper.GetUserTokenAsync(turnContext, _settings.AzureBotOAuthConnectionName, null, cancellationToken).ConfigureAwait(false);
+            if (response != null)
+            {
+                token = await HandleOBO(turnContext, response.Token, exchangeConnection, exchangeScopes, cancellationToken).ConfigureAwait(false);
+            }
+            return token;
         }
 
         private async Task<string> HandleOBO(ITurnContext turnContext, string token, string exchangeConnection = null, IList<string> exchangeScopes = null, CancellationToken cancellationToken = default)

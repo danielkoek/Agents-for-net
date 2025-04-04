@@ -20,9 +20,9 @@ namespace Microsoft.Agents.Builder.UserAuth
         public SignInStatus Status { get; set; } = status;
 
         /// <summary>
-        /// The exception object. Only available when sign-in status is Error.
+        /// The non-success message. Only available when sign-in status is Error.
         /// </summary>
-        public Exception? Error { get; set; }
+        public string Message { get; set; }
 
         /// <summary>
         /// The cause of error. Only available when sign-in status is Error.

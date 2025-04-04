@@ -114,7 +114,7 @@ namespace Microsoft.Agents.Builder.UserAuth
             {
                 SignInResponse newResponse = new(SignInStatus.Error)
                 {
-                    Error = ex,
+                    Message = ex.Message,
                     Cause = AuthExceptionReason.Other
                 };
                 if (ex is AuthException authEx)
