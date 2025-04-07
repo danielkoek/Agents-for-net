@@ -220,6 +220,7 @@ public static class AspNetExtensions
                 }
             };
         });
+        logger?.LogInformation("Agent Auth Configured for audiences: [{t}]", string.Join(" ", [.. audiences]));
     }
 
     class AllowedCallersPolicy : IAuthorizationHandler, IAuthorizationRequirement

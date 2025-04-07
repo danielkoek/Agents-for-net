@@ -24,14 +24,15 @@ public class AuthAgent : AgentApplication
         OnMessage("/signout", SignOutAsync);
         OnMessage("/reset", ResetAsync);
         OnMessage("/me", MeAsync);
-        Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
-        Authorization.OnUserSignInFailure(OnUserSignInFailure);
+        base.Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
+        base.Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
-       // OnActivity(ActivityTypes.Message, OnMessageAsync, rank: RouteRank.Last);
+       OnActivity(ActivityTypes.Message, OnMessageAsync);
     }
 
     private async Task MeAsync(ITurnContext turnContext, ITurnState state, CancellationToken ct)
     {
+        // string token = Authorization.GetTurnToken(Authorization.DefaultHandlerName);
         string token = state.User.GetValue<string>("token");
         if (token == null)
         {
@@ -45,9 +46,18 @@ public class AuthAgent : AgentApplication
                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
                return Task.FromResult(0);
            }));
+        
         var me = await _userClient.Me.Request().GetAsync();
         Console.WriteLine(me);
         await turnContext.SendActivityAsync($"Hello {me.GivenName} {me.Surname} ({me.DisplayName}) {me.JobTitle} {me.Mail}");
+
+
+        var chats = await _userClient.Me.Chats.Request().GetAsync();
+        await turnContext.SendActivityAsync($"found chats {chats.Count}");
+        foreach (var chat in chats)
+        {
+            await turnContext.SendActivityAsync($"chat {chat.Id} {chat.ChatType} {chat.Messages?.Count} {chat.WebUrl}");
+        }
     }
 
     private async Task WelcomeMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
@@ -56,7 +66,17 @@ public class AuthAgent : AgentApplication
         {
             if (member.Id != turnContext.Activity.Recipient.Id)
             {
-                await turnContext.SendActivityAsync(MessageFactory.Text("Welcome to AuthorizationAgent. Type 'auto' to demonstrate Auto SignIn. Type '/signin' to sign in for graph.  Type '/signout' to sign-out.  Anything else will be repeated back."), cancellationToken);
+                await turnContext.SendActivityAsync(MessageFactory.Text(
+                    """
+                    Welcome to AuthorizationAgent. Type :
+                        'auto' to demonstrate Auto SignIn. 
+                        '/signin' to sign in for graph.
+                        '/signout' to sign-out. 
+                        '/me' to show your graph account. 
+                    
+                    Anything else will be repeated back.
+                    
+                    """), cancellationToken);
             }
         }
     }
@@ -95,7 +115,7 @@ public class AuthAgent : AgentApplication
     private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
         turnState.User.SetValue<string>("token", token);
-        await turnContext.SendActivityAsync($"Manual Sign In: Successfully logged in to '{handlerName}'", cancellationToken: cancellationToken);
+        await turnContext.SendActivityAsync($"Manual Sign In:Successfully logged in to '{Authorization.DefaultHandlerName}', token length: {Authorization.GetTurnToken(Authorization.DefaultHandlerName).Length}", cancellationToken: cancellationToken);
     }
 
     private async Task OnUserSignInFailure(ITurnContext turnContext, ITurnState turnState, string handlerName, SignInResponse response, IActivity initiatingActivity, CancellationToken cancellationToken)
