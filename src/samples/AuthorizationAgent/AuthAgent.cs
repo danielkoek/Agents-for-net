@@ -7,6 +7,7 @@ using Microsoft.Agents.Builder.State;
 using Microsoft.Agents.Builder.UserAuth;
 using Microsoft.Agents.Core.Models;
 using Microsoft.Graph;
+using Microsoft.VisualBasic;
 using System;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -20,11 +21,12 @@ public class AuthAgent : AgentApplication
     {
         OnConversationUpdate(ConversationUpdateEvents.MembersAdded, WelcomeMessageAsync);
 
-        OnMessage("/signin", SignInAsync);
-        OnMessage("/signout", SignOutAsync);
-        OnMessage("/reset", ResetAsync);
+        // OnMessage("/signin", SignInAsync);
+        // OnMessage("/signout", SignOutAsync);
+        // OnMessage("/reset", ResetAsync);
         OnMessage("/me", MeAsync);
-        base.Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
+        OnMessage("/chats", ChatAsync);
+        // base.Authorization.OnUserSignInSuccess(OnUserSignInSuccess);
         base.Authorization.OnUserSignInFailure(OnUserSignInFailure);
 
        OnActivity(ActivityTypes.Message, OnMessageAsync);
@@ -32,14 +34,15 @@ public class AuthAgent : AgentApplication
 
     private async Task MeAsync(ITurnContext turnContext, ITurnState state, CancellationToken ct)
     {
+        //await Authorization.SignInUserAsync(turnContext, state, "graph", cancellationToken: ct);
         string token = Authorization.GetTurnToken(Authorization.DefaultHandlerName);
-        //string token = state.User.GetValue<string>("token");
-        if (token == null)
-        {
-            await turnContext.SendActivityAsync("Login first", cancellationToken: ct);
-            await SignInAsync(turnContext, state, ct);
-            return;
-        }
+        // string token = state.User.GetValue<string>("token");
+        //if (token == null)
+        //{
+        //    await turnContext.SendActivityAsync("Login first", cancellationToken: ct);
+        //    await Authorization.SignInUserAsync(turnContext, state, "graph", cancellationToken: ct);
+        //    return;
+        //}
 
         var _userClient = new GraphServiceClient(new DelegateAuthenticationProvider(requestMessage =>
            {
@@ -50,7 +53,26 @@ public class AuthAgent : AgentApplication
         var me = await _userClient.Me.Request().GetAsync();
         Console.WriteLine(me);
         await turnContext.SendActivityAsync($"Hello {me.GivenName} {me.Surname} ({me.DisplayName}) {me.JobTitle} {me.Mail}");
+       
+    }
 
+    private async Task ChatAsync(ITurnContext turnContext, ITurnState state, CancellationToken ct)
+    {
+        //await Authorization.SignInUserAsync(turnContext, state, "graph", cancellationToken: ct);
+        string token = Authorization.GetTurnToken(Authorization.DefaultHandlerName);
+        // string token = state.User.GetValue<string>("token");
+        //if (token == null)
+        //{
+        //    await turnContext.SendActivityAsync("Login first", cancellationToken: ct);
+        //    await Authorization.SignInUserAsync(turnContext, state, "graph", cancellationToken: ct);
+        //    return;
+        //}
+
+        var _userClient = new GraphServiceClient(new DelegateAuthenticationProvider(requestMessage =>
+        {
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
+            return Task.FromResult(0);
+        }));
 
         var chats = await _userClient.Me.Chats.Request().GetAsync();
         await turnContext.SendActivityAsync($"found chats {chats.Count}");
@@ -69,10 +91,8 @@ public class AuthAgent : AgentApplication
                 await turnContext.SendActivityAsync(MessageFactory.Text(
                     """
                     Welcome to AuthorizationAgent. Type :
-                        'auto' to demonstrate Auto SignIn. 
-                        '/signin' to sign in for graph.
-                        '/signout' to sign-out. 
                         '/me' to show your graph account. 
+                        '/chats' to show your teams chats.
                     
                     Anything else will be repeated back.
                     
@@ -81,23 +101,23 @@ public class AuthAgent : AgentApplication
         }
     }
 
-    private async Task SignInAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
-    {
-        await Authorization.SignInUserAsync(turnContext, turnState, "graph", cancellationToken: cancellationToken);
-    }
+    //private async Task SignInAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
+    //{
+    //    await Authorization.SignInUserAsync(turnContext, turnState, "graph", cancellationToken: cancellationToken);
+    //}
 
-    private async Task SignOutAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
-    {
-        await Authorization.SignOutUserAsync(turnContext, turnState, cancellationToken: cancellationToken);
-        await turnContext.SendActivityAsync("You have signed out", cancellationToken: cancellationToken);
-    }
+    //private async Task SignOutAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
+    //{
+    //    await Authorization.SignOutUserAsync(turnContext, turnState, cancellationToken: cancellationToken);
+    //    await turnContext.SendActivityAsync("You have signed out", cancellationToken: cancellationToken);
+    //}
 
-    private async Task ResetAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
-    {
-        await turnState.Conversation.DeleteStateAsync(turnContext, cancellationToken);
-        await turnState.User.DeleteStateAsync(turnContext, cancellationToken);
-        await turnContext.SendActivityAsync("Ok I've deleted the current turn state", cancellationToken: cancellationToken);
-    }
+    //private async Task ResetAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
+    //{
+    //    await turnState.Conversation.DeleteStateAsync(turnContext, cancellationToken);
+    //    await turnState.User.DeleteStateAsync(turnContext, cancellationToken);
+    //    await turnContext.SendActivityAsync("Ok I've deleted the current turn state", cancellationToken: cancellationToken);
+    //}
 
     private async Task OnMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
@@ -112,11 +132,11 @@ public class AuthAgent : AgentApplication
         }
     }
 
-    private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
-    {
-        // turnState.User.SetValue<string>("token", token);
-        await turnContext.SendActivityAsync($"Manual Sign In:Successfully logged in to '{Authorization.DefaultHandlerName}', token length: {Authorization.GetTurnToken(Authorization.DefaultHandlerName).Length}", cancellationToken: cancellationToken);
-    }
+    //private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
+    //{
+    //    // turnState.User.SetValue<string>("token", token);
+    //    await turnContext.SendActivityAsync($"Manual Sign In:Successfully logged in to '{Authorization.DefaultHandlerName}', token length: {Authorization.GetTurnToken(Authorization.DefaultHandlerName).Length}", cancellationToken: cancellationToken);
+    //}
 
     private async Task OnUserSignInFailure(ITurnContext turnContext, ITurnState turnState, string handlerName, SignInResponse response, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
