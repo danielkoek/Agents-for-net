@@ -32,8 +32,8 @@ public class AuthAgent : AgentApplication
 
     private async Task MeAsync(ITurnContext turnContext, ITurnState state, CancellationToken ct)
     {
-        // string token = Authorization.GetTurnToken(Authorization.DefaultHandlerName);
-        string token = state.User.GetValue<string>("token");
+        string token = Authorization.GetTurnToken(Authorization.DefaultHandlerName);
+        //string token = state.User.GetValue<string>("token");
         if (token == null)
         {
             await turnContext.SendActivityAsync("Login first", cancellationToken: ct);
@@ -114,7 +114,7 @@ public class AuthAgent : AgentApplication
 
     private async Task OnUserSignInSuccess(ITurnContext turnContext, ITurnState turnState, string handlerName, string token, IActivity initiatingActivity, CancellationToken cancellationToken)
     {
-        turnState.User.SetValue<string>("token", token);
+        // turnState.User.SetValue<string>("token", token);
         await turnContext.SendActivityAsync($"Manual Sign In:Successfully logged in to '{Authorization.DefaultHandlerName}', token length: {Authorization.GetTurnToken(Authorization.DefaultHandlerName).Length}", cancellationToken: cancellationToken);
     }
 
