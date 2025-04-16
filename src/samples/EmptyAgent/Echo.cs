@@ -32,7 +32,8 @@ public class Echo : AgentApplication
     private async Task OnMessageAsync(ITurnContext turnContext, ITurnState turnState, CancellationToken cancellationToken)
     {
         // Increment count state.
-        int count = turnState.Conversation.IncrementMessageCount();
+        int count = turnState.Conversation.GetValue<int>("countKey");
+        turnState.Conversation.SetValue("countKey", ++count);
 
         await turnContext.SendActivityAsync($"[{count}] you said: {turnContext.Activity.Text}", cancellationToken: cancellationToken);
     }

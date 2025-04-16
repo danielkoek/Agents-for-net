@@ -4,8 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<NoWarn>$(NoWarn);SKEXP0110;SKEXP0010</NoWarn>
-		<UserSecretsId>b842df34-390f-490d-9dc0-73909363ad16</UserSecretsId>
+		<NoWarn>$(NoWarn);SKEXP0010</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,20 +15,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-    <PackageReference Include="Azure.Identity" />
-		<PackageReference Include="Microsoft.IdentityModel.Validators" />
-	</ItemGroup>
-	<ItemGroup>	  
+		<PackageReference Include="Azure.Identity" />
 		<PackageReference Include="AdaptiveCards" />
+		<PackageReference Include="Microsoft.SemanticKernel.Agents.AzureAI" />
 		<PackageReference Include="Microsoft.SemanticKernel.Agents.Core" />
-		<PackageReference Include="Microsoft.SemanticKernel.Agents.OpenAI" />
 		<PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" />
 		<PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\libraries\Authentication\Authentication.Msal\Microsoft.Agents.Authentication.Msal.csproj" />
-		<ProjectReference Include="..\..\..\libraries\Hosting\AspNetCore\Microsoft.Agents.Hosting.AspNetCore.csproj" />
+	  <ProjectReference Include="..\..\..\libraries\Authentication\Authentication.Msal\Microsoft.Agents.Authentication.Msal.csproj" />
+	  <ProjectReference Include="..\..\..\libraries\Hosting\AspNetCore\Microsoft.Agents.Hosting.AspNetCore.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

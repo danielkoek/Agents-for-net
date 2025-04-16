@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Microsoft.Agents.Hosting.AspNetCore;
-using Microsoft.Agents.Samples;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,9 +19,6 @@ builder.Services.AddHttpClient();
 
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
-
-// Add AspNet token validation
-builder.Services.AddAgentAspNetAuthentication(builder.Configuration);
 
 // Add basic bot functionality
 builder.AddAgent<TeamsBot<MainDialog>, AdapterWithErrorHandler>();

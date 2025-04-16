@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Microsoft.Agents.Hosting.AspNetCore;
-using Microsoft.Agents.Samples;
 using Microsoft.Agents.Storage;
 using Microsoft.AspNetCore.Builder;
 using DialogSkillBot.Bots;
@@ -17,9 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Logging.AddConsole();
-
-// Add AspNet token validation
-builder.Services.AddAgentAspNetAuthentication(builder.Configuration);
 
 // The Dialog that will be run by the bot.
 builder.Services.AddSingleton<ActivityRouterDialog>();
